@@ -1,0 +1,293 @@
+openapi: 3.0.3
+info:
+  title: Task tracker
+  description: Task tracker
+  version: 0.0.1
+servers:
+  - url: localhost:8080
+paths:
+  /v1/tasks/{taskId}:
+    put:
+      summary: Updates a task by id in the path
+      operationId: updateTask
+      tags:
+        - tasks
+      parameters:
+        - $ref: "#/components/parameters/taskId"
+      requestBody:
+        description: Task fields to update
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/TaskMutation"
+      responses:
+        "200":
+          description: Task is successfully updated
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/TaskDto"
+        "404":
+          $ref: "#/components/responses/notFound"
+        "5XX":
+          $ref: "#/components/responses/unexpectedError"
+
+    delete:
+      summary: Deletes a task by id in the path
+      operationId: deleteTask
+      tags:
+        - tasks
+      parameters:
+        - $ref: "#/components/parameters/taskId"
+      responses:
+        "200":
+          description: Task is successfully deleted
+        "404":
+          $ref: "#/components/responses/notFound"
+        "5XX":
+          $ref: "#/components/responses/unexpectedError"
+
+  /v1/projects:
+    get:
+      summary: Returns projects by user id in header
+      operationId: getProjects
+      tags:
+        - projects
+      parameters:
+        - $ref: "#/components/parameters/userId"
+      responses:
+        "200":
+          description: Projects is successfully found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ProjectList"
+        "404":
+          $ref: "#/components/responses/notFound"
+        "5XX":
+          $ref: "#/components/responses/unexpectedError"
+
+    post:
+      summary: Creates an empty project and returns it's in the response
+      operationId: createProject
+      tags:
+        - projects
+      parameters:
+        - $ref: "#/components/parameters/userId"
+      responses:
+        "201":
+          description: Project is successfully created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ProjectDto"
+        "5XX":
+          $ref: "#/components/responses/unexpectedError"
+
+  /v1/projects/{projectId}:
+    put:
+      summary: Updates a project by id in the path
+      operationId: updateProject
+      tags:
+        - projects
+      parameters:
+        - $ref: "#/components/parameters/projectId"
+      requestBody:
+        description: Project fields to update
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ProjectMutation"
+      responses:
+        "200":
+          description: Project is successfully updated
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ProjectDto"
+        "404":
+          $ref: "#/components/responses/notFound"
+        "5XX":
+          $ref: "#/components/responses/unexpectedError"
+
+    delete:
+      summary: Deletes a project by id in the path
+      operationId: deleteProject
+      tags:
+        - projects
+      parameters:
+        - $ref: "#/components/parameters/projectId"
+      responses:
+        "200":
+          description: Project is successfully deleted
+        "404":
+          $ref: "#/components/responses/notFound"
+        "5XX":
+          $ref: "#/components/responses/unexpectedError"
+
+  /v1/projects/{projectId}/tasks:
+    get:
+      summary: Returns tasks from the project by id
+      operationId: getTasksFromProject
+      tags:
+        - tasks
+      parameters:
+        - $ref: '#/components/parameters/projectId'
+      responses:
+        '200':
+          description: Tasks is successfully found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TaskList'
+        '400':
+          description: Deadline date validation failed
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorDto'
+        '404':
+          $ref: '#/components/responses/notFound'
+        '5XX':
+          $ref: '#/components/responses/unexpectedError'
+
+    post:
+      summary: Creates task inside a project
+      operationId: createTask
+      tags:
+        - tasks
+      parameters:
+        - $ref: "#/components/parameters/projectId"
+      responses:
+        "201":
+          description: Task is successfully created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/TaskDto"
+        "5XX":
+          $ref: "#/components/responses/unexpectedError"
+
+components:
+  schemas:
+    TaskDto:
+      type: object
+      required:
+        - id
+        - name
+        - description
+        - status
+      properties:
+        id:
+          type: string
+        name:
+          type: string
+          example: Buy apples
+        description:
+          type: string
+          example: Apples should be sour
+        status:
+          type: string
+
+    TaskList:
+      type: array
+      items:
+        $ref: "#/components/schemas/TaskDto"
+
+    TaskMutation:
+      type: object
+      properties:
+        name:
+          type: string
+        description:
+          type: string
+        projectId:
+          type: integer
+        status:
+          type: string
+
+    ProjectDto:
+      type: object
+      required:
+        - id
+        - name
+        - description
+      properties:
+        id:
+          type: string
+        name:
+          type: string
+          example: Assistance to refugees
+        description:
+          type: string
+          example: Volunteering
+
+    ProjectList:
+      type: array
+      items:
+        $ref: "#/components/schemas/ProjectDto"
+
+    ProjectMutation:
+      type: object
+      properties:
+        name:
+          type: string
+          example: Assistance to refugees
+        description:
+          type: string
+          example: Volunteering
+
+    ErrorDto:
+      type: object
+      required:
+        - code
+        - message
+      properties:
+        code:
+          type: integer
+          format: code
+        message:
+          type: string
+          description: Explanation of error
+
+  parameters:
+    userId:
+      in: header
+      name: userId
+      required: true
+      description: Id of the user trying to access a resource
+      schema:
+        type: string
+
+    taskId:
+      in: path
+      name: taskId
+      required: true
+      description: Id of the accessing task
+      schema:
+        type: string
+
+    projectId:
+      in: path
+      name: projectId
+      required: true
+      description: Id of the accessed project
+      schema:
+        type: string
+
+  responses:
+    notFound:
+      description: Resource not found
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/ErrorDto"
+
+    unexpectedError:
+      description: Unexpected error
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/ErrorDto"

@@ -1,0 +1,101 @@
+plugins {
+    id 'java'
+    id 'idea'
+    id 'org.springframework.boot' version '2.6.2'
+    id 'io.spring.dependency-management' version '1.0.11.RELEASE'
+    id "org.openapi.generator" version "5.4.0"
+}
+
+group = 'com.github.straight'
+version = '0.0.1-SNAPSHOT'
+sourceCompatibility = '18'
+
+idea {
+    module {
+        generatedSourceDirs += file("${buildDir}/generated-src/src".toString())
+    }
+}
+
+compileJava.dependsOn('openApiGenerate')
+
+openApiGenerate {
+    generatorName = "spring"
+    library = "spring-boot"
+    inputSpec = "${rootDir}/openapi/task-tracker-v1.yaml".toString()
+    outputDir = "${buildDir}/generated-src".toString()
+    configOptions = [
+            useOptional          : "true",
+            swaggerDocketConfig  : "false",
+            performBeanValidation: "false",
+            useBeanValidation    : "false",
+            useTags              : "true",
+            singleContentTypes   : "true",
+            basePackage          : "com.github.straight.task.tracker.api",
+            configPackage        : "com.github.straight.task.tracker.api",
+            title                : rootProject.name,
+            java8                : "false",
+            dateLibrary          : "java8",
+            serializableModel    : "true",
+            artifactId           : rootProject.name,
+            apiPackage           : "com.github.straight.task.tracker.api",
+            modelPackage         : "com.github.straight.task.tracker.model",
+            invokerPackage       : "com.github.straight.task.tracker.api",
+            interfaceOnly        : "true"
+    ]
+}
+
+sourceSets {
+    main {
+        java {
+            srcDir new File(buildDir, 'generated-src/src/main/java')
+        }
+    }
+    test {
+        resources {
+            srcDir 'src/test/java/resources'
+        }
+    }
+}
+
+repositories {
+    mavenCentral()
+}
+
+dependencies {
+    implementation 'org.springframework.boot:spring-boot-starter-web'
+    implementation 'org.springframework.boot:spring-boot-starter-data-jpa'
+    implementation 'org.springframework.boot:spring-boot-starter-validation'
+
+    // see https://github.com/OpenAPITools/openapi-generator/issues/4245
+    implementation 'org.openapitools:jackson-databind-nullable:0.2.2'
+    // see https://springfox.github.io/springfox/docs/current/
+    implementation 'io.springfox:springfox-boot-starter:3.0.0'
+
+    implementation 'org.mapstruct:mapstruct:1.4.2.Final'
+
+    implementation 'io.github.artrayme:jmantic:0.6.3'
+
+    annotationProcessor 'org.projectlombok:lombok'
+    annotationProcessor 'org.mapstruct:mapstruct-processor:1.4.2.Final'
+
+    compileOnly 'org.projectlombok:lombok'
+
+    runtimeOnly 'com.h2database:h2:2.1.212'
+
+    // see https://github.com/OpenAPITools/openapi-generator/issues/2901
+    testImplementation('org.springframework.boot:spring-boot-starter-test') {
+        exclude group: 'org.junit.vintage', module: 'junit-vintage-engine'
+    }
+}
+
+configurations {
+    all {
+        exclude group: 'org.springframework.boot', module: 'spring-boot-starter-logging'
+        exclude group: 'ch.qos.logback', module: 'logback-classic'
+        exclude group: 'org.apache.logging.log4j', module: 'log4j-to-slf4j'
+    }
+}
+
+test {
+    useJUnitPlatform()
+}
